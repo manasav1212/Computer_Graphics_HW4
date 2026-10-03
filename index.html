@@ -307,6 +307,90 @@ void main() {
 
     }
 
+    function makeBuffers(positions, colors, indices)
+    {
+      const pos = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, pos);
+      gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+      const col = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, col);
+      gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+
+      const ind = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ind); 
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+      return {pos, col, ind, count: indices.length};
+    }
+
+    function makeNode(buf, local, useZrotation, children = [])
+    {
+      return {buf, local, useZrotation, children};
+    }
+
+    function initScene()
+    {
+      drawCylinder(0.1, 2);
+      drawTorus(0.2, 0.1);
+      drawSphere(0.3);
+      drawCone(0.3, 0.5);
+
+      const cylinder = makeNode(makeBuffers(cylinderPositions, cylinderColors, cylinderIndices), translation(0, -2, 0), true);
+      const torus = makeNode(makeBuffers(torusPositions, torusColors, torusIndices), translation(0, 2.3, 0), false);
+      const sphere = makeNode(makeBuffers(spherePositions, sphereColors, sphereIndices), translation(0, 0.6, 0), false);
+      const cone = makeNode(makeBuffers(conePositions, coneColors, coneIndices), translation(0, 0.3, 0), true);
+
+      cylinder.children.push(torus);
+      torus.children.push(sphere);
+      sphere.children.push(cone);
+
+      return {root: cylinder, torus, sphere, cone};
+    }
+
+    function drawNode(Node, ParentWorld)
+    {
+      const upright = rotation(-Math.PI / 2, 0);
+
+      const world = multiplyMat4(ParentWorld, Node.local);
+      const model = Node.useZrotation? multiplyMat4(world, upright) : world;
+
+      gl.uniformMatrix4fv(uMTM, false, model);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, Node.buf.pos);
+      gl.enableVertexAttribArray(posLoc);
+      gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, Node.buf.col);
+      gl.enableVertexAttribArray(colorLoc);
+      gl.vertexAttribPointer(colorLoc, 3, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Node.buf.ind);
+      gl.drawElements(gl.TRIANGLES, Node.buf.count, gl.UNSIGNED_SHORT, 0);
+
+      for( const child of Node.children)
+        drawNode(child, world);
+    }
+
+    function hierarchichalModelRender()
+    {
+      const scene = initScene();
+
+      gl.clearColor(0, 0, 0, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      let modelViewMatrix = mat4Identity();
+      let proj = projOrtho;
+      modelTransformationMatrix = mat4Identity();
+
+      modelViewMatrix = mat4Translate(modelViewMatrix, [camX, camY, camZ]);
+      
+      gl.uniformMatrix4fv(uPM, false, proj);
+      gl.uniformMatrix4fv(uMVM, false, modelViewMatrix);
+
+      drawNode(scene.root, mat4Identity());
+    }
+
     function loadObject(objectName)
     {
       gl.clearColor(0, 0, 0, 1);
@@ -403,7 +487,8 @@ void main() {
 
     // Initialize when page loads
     window.onload = function () {
-      loadObject();
+      // loadObject();
+      hierarchichalModelRender();
       // setInterval(render, 30);
     }
 
