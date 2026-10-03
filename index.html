@@ -44,8 +44,8 @@ Press F12 to see the console for debugging.</p>
         <textarea id="fragEditor"></textarea>
       </div>
     </div>
-    <div>
-      <div>
+    <!-- <div> -->
+      <!-- <div>
         <label for="obj_selection">Choose Object:</label>
         <select id="obj_selection">
           <option value="cube" selected>Cube</option>
@@ -54,8 +54,8 @@ Press F12 to see the console for debugging.</p>
           <option value="sphere">Sphere</option>
           <option value="torus">Torus</option>
         </select>
-      </div>
-      <div>
+      </div> -->
+      <!-- <div> -->
         <canvas id="glcanvas" width="400" height="400"></canvas>
       </div>
       <div>
@@ -152,25 +152,67 @@ void main() {
     fragEditor.value = document.getElementById("fragment-shader").textContent;
 
     let program, posLoc, colorLoc, timeLoc, uMVM, uPM, uMTM;
-    let vbo, nbo, ibo;
+    // let vbo, nbo, ibo;
+    let vbo_cy, nbo_cy, ibo_cy, vbo_to, nbo_to, ibo_to, vbo_sp, nbo_sp, ibo_sp, vbo_co, nbo_co, ibo_co;
 
-    const select = document.getElementById("obj_selection");
+    // const select = document.getElementById("obj_selection");
 
     // Buffers
     function initBuffers() {
-      vbo = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-      gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
 
-      nbo = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, nbo);
-      gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+      //shape 1
+      vbo_cy = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo_cy);
+      gl.bufferData(gl.ARRAY_BUFFER, cylinderPositions, gl.STATIC_DRAW);
 
-      ibo = gl.createBuffer();
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo); 
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+      nbo_cy = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, nbo_cy);
+      gl.bufferData(gl.ARRAY_BUFFER, cylinderColors, gl.STATIC_DRAW);
+
+      ibo_cy = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo_cy); 
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, cylinderIndices, gl.STATIC_DRAW);
+
+      //shape 2
+      vbo_to = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo_to);
+      gl.bufferData(gl.ARRAY_BUFFER, torusPositions, gl.STATIC_DRAW);
+
+      nbo_to = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, nbo_to);
+      gl.bufferData(gl.ARRAY_BUFFER, torusColors, gl.STATIC_DRAW);
+
+      ibo_to = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo_to); 
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, torusIndices, gl.STATIC_DRAW);
+
+      //shape 3
+      vbo_sp = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo_sp);
+      gl.bufferData(gl.ARRAY_BUFFER, spherePositions, gl.STATIC_DRAW);
+
+      nbo_sp = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, nbo_sp);
+      gl.bufferData(gl.ARRAY_BUFFER, sphereColors, gl.STATIC_DRAW);
+
+      ibo_sp = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo_sp); 
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, sphereIndices, gl.STATIC_DRAW);
+
+      //shape 4
+      vbo_co = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo_co);
+      gl.bufferData(gl.ARRAY_BUFFER, conePositions, gl.STATIC_DRAW);
+
+      nbo_co = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, nbo_co);
+      gl.bufferData(gl.ARRAY_BUFFER, coneColors, gl.STATIC_DRAW);
+
+      ibo_co = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo_co); 
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, coneIndices, gl.STATIC_DRAW);
     }
-    initBuffers();
+    // initBuffers();
 
     function initShaderProgram() {
       try {
@@ -236,48 +278,71 @@ void main() {
       }
     });
 
-    function loadObject(objectName)
+    function drawShape(positions, colors, indices, modelMatrix)
     {
-      if(objectName == "cube")
-      {
-        gl.clearColor(0, 0, 0, 1);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        drawCube();
-        initBuffers();
-      }
-      else if(objectName == "cylinder")
-      {
-        gl.clearColor(0, 0, 0, 1);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        drawCylinder(1, 2);
-        initBuffers();
-      }
-      else if(objectName == "cone")
-      {
-        gl.clearColor(0, 0, 0, 1);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        drawCone(1, 2);
-        initBuffers();
-      }
-      else if(objectName == "sphere")
-      {
-        gl.clearColor(0, 0, 0, 1);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        drawSphere(1);
-        initBuffers();
-      }
-      else if(objectName == "torus")
-      {
-        gl.clearColor(0, 0, 0, 1);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        drawTorus(1.0, 0.45);
-        initBuffers();
-      }
+      const pos = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, pos);
+      gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+      const col = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, col);
+      gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+
+      const ind = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ind); 
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+      gl.uniformMatrix4fv(uMTM, false, modelMatrix);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, pos);
+      gl.enableVertexAttribArray(posLoc);
+      gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, col);
+      gl.enableVertexAttribArray(colorLoc);
+      gl.vertexAttribPointer(colorLoc, 3, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ind);
+      gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+
     }
 
-    select.addEventListener('change', e => {
-      loadObject(e.target.value);      
-    });
+    function loadObject(objectName)
+    {
+      gl.clearColor(0, 0, 0, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      let modelViewMatrix = mat4Identity();
+      let proj = projOrtho;
+      modelTransformationMatrix = mat4Identity();
+
+      modelViewMatrix = mat4Translate(modelViewMatrix, [camX, camY, camZ]);
+      
+      gl.uniformMatrix4fv(uPM, false, proj);
+      gl.uniformMatrix4fv(uMVM, false, modelViewMatrix);
+      
+      const upright = rotation(-Math.PI / 2, 0);
+
+      drawCylinder(0.1, 2);
+      let cylinderTranslate = multiplyMat4(translation(0, -2, 0), upright);
+      drawShape(cylinderPositions, cylinderColors, cylinderIndices, cylinderTranslate);
+
+      drawTorus(0.2, 0.1);
+      let torusTranslate = translation(0, 0.3, 0);
+      drawShape(torusPositions, torusColors, torusIndices, torusTranslate);
+
+      drawSphere(0.3);
+      let sphereTranslate = translation(0, 0.9, 0);
+      drawShape(spherePositions, sphereColors, sphereIndices, sphereTranslate);
+
+      drawCone(0.3, 0.5);
+      let coneTranslate = multiplyMat4(translation(0, 1.2, 0), upright);
+      drawShape(conePositions, coneColors, coneIndices, coneTranslate);
+    }
+
+    // select.addEventListener('change', e => {
+    //   loadObject(e.target.value);      
+    // });
 
 
     // Projection setup
@@ -338,7 +403,8 @@ void main() {
 
     // Initialize when page loads
     window.onload = function () {
-      setInterval(render, 30);
+      loadObject();
+      // setInterval(render, 30);
     }
 
   </script>

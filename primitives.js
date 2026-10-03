@@ -1,34 +1,50 @@
+let cylinderPositions = new Float32Array();
+let cylinderColors = new Float32Array();
+let cylinderIndices = new Uint16Array();
+
+let torusPositions = new Float32Array();
+let torusColors = new Float32Array();
+let torusIndices = new Uint16Array();
+
+let spherePositions = new Float32Array();
+let sphereColors = new Float32Array();
+let sphereIndices = new Uint16Array();
+
+let conePositions = new Float32Array();
+let coneColors = new Float32Array();
+let coneIndices = new Uint16Array();
+
 // cube
-let positions = new Float32Array([
-  -1, -1, -1,  // 0
-   1, -1, -1,  // 1
-   1,  1, -1,  // 2
-  -1,  1, -1,  // 3
-  -1, -1,  1,  // 4
-   1, -1,  1,  // 5
-   1,  1,  1,  // 6
-  -1,  1,  1   // 7
-]);
+// let positions = new Float32Array([
+//   -1, -1, -1,  // 0
+//    1, -1, -1,  // 1
+//    1,  1, -1,  // 2
+//   -1,  1, -1,  // 3
+//   -1, -1,  1,  // 4
+//    1, -1,  1,  // 5
+//    1,  1,  1,  // 6
+//   -1,  1,  1   // 7
+// ]);
 
-let colors = new Float32Array([
-  1,0,0,  0,1,0,  0,0,1, 1,1,0, 1,0,1, 0,1,1, 1,1,0, 1,0,1
-]);
+// let colors = new Float32Array([
+//   1,0,0,  0,1,0,  0,0,1, 1,1,0, 1,0,1, 0,1,1, 1,1,0, 1,0,1
+// ]);
 
 
-let indices = new Uint16Array([
-  // Front
-  4, 5, 6,   4, 6, 7,
-  // Back
-  1, 0, 3,   1, 3, 2,
-  // Top
-  3, 7, 6,   3, 6, 2,
-  // Bottom
-  0, 1, 5,   0, 5, 4,
-  // Right
-  1, 2, 6,   1, 6, 5,
-  // Left
-  0, 4, 7,   0, 7, 3,
-]);
+// let indices = new Uint16Array([
+//   // Front
+//   4, 5, 6,   4, 6, 7,
+//   // Back
+//   1, 0, 3,   1, 3, 2,
+//   // Top
+//   3, 7, 6,   3, 6, 2,
+//   // Bottom
+//   0, 1, 5,   0, 5, 4,
+//   // Right
+//   1, 2, 6,   1, 6, 5,
+//   // Left
+//   0, 4, 7,   0, 7, 3,
+// ]);
 
 function drawCube()
 {
@@ -102,9 +118,9 @@ function drawSphere(radius)
     }
   }
 
-  positions = new Float32Array(Positions);
-  colors = new Float32Array(Colors);
-  indices = new Uint16Array(Indices);
+  spherePositions = new Float32Array(Positions);
+  sphereColors = new Float32Array(Colors);
+  sphereIndices = new Uint16Array(Indices);
 
 }
 
@@ -163,9 +179,9 @@ function drawCylinder(radius, height)
     Indices.push(topCenter, first, second);
   }
 
-  positions = new Float32Array(Positions);
-  colors = new Float32Array(Colors);
-  indices = new Uint16Array(Indices);
+  cylinderPositions = new Float32Array(Positions);
+  cylinderColors = new Float32Array(Colors);
+  cylinderIndices = new Uint16Array(Indices);
 }
 
 function drawCone(radius, height)
@@ -211,9 +227,9 @@ function drawCone(radius, height)
     Indices.push(Center, second, first);
   }
 
-  positions = new Float32Array(Positions);
-  colors = new Float32Array(Colors);
-  indices = new Uint16Array(Indices);
+  conePositions = new Float32Array(Positions);
+  coneColors = new Float32Array(Colors);
+  coneIndices = new Uint16Array(Indices);
 }
 
 function drawTorus(Radius, radius)
@@ -250,9 +266,9 @@ function drawTorus(Radius, radius)
     }
   }
 
-  positions = new Float32Array(Positions);
-  colors = new Float32Array(Colors);
-  indices = new Uint16Array(Indices);
+  torusPositions = new Float32Array(Positions);
+  torusColors = new Float32Array(Colors);
+  torusIndices = new Uint16Array(Indices);
 }
 
 function translation(tx, ty, tz)
