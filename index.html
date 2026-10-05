@@ -44,42 +44,32 @@ Press F12 to see the console for debugging.</p>
         <textarea id="fragEditor"></textarea>
       </div>
     </div>
-    <!-- <div> -->
-      <!-- <div>
-        <label for="obj_selection">Choose Object:</label>
-        <select id="obj_selection">
-          <option value="cube" selected>Cube</option>
-          <option value="cylinder">Cylinder</option>
-          <option value="cone">Cone</option>
-          <option value="sphere">Sphere</option>
-          <option value="torus">Torus</option>
-        </select>
-      </div> -->
-      <!-- <div> -->
+    <div>
+      <div>
         <canvas id="glcanvas" width="400" height="400"></canvas>
       </div>
       <div>
-        <p>Choose Transformation:</p>
+        <p>Move Slider to Rotate Shape:</p>
         <label>
-          <input type="radio" name="transformation" value="rotate" checked>
-          Rotate
-        </label>
+          Cylinder
+          <input type="range" id="CylinderAngle" min="-45" max="45" step="1" value="0">
+        </label><br>
         <label>
-          <input type="radio" name="transformation" value="translate">
-          Translate
-        </label>
+          Torus
+          <input type="range" id="TorusAngle" min="-45" max="45" step="1" value="0">
+        </label><br>
         <label>
-          <input type="radio" name="transformation" value="scale">
-          Scale
-        </label>
+          Sphere
+          <input type="range" id="SphereAngle" min="-45" max="45" step="1" value="0">
+        </label><br>
         <label>
-          <input type="radio" name="transformation" value="shear">
-          Shear
+          Cone
+          <input type="range" id="ConeAngle" min="-45" max="45" step="1" value="0">
         </label><br>
         </div>
         <div>
           <p>
-          <button onclick="resetTransformation()">Reset Transformation</button>
+          <button onclick="resetShapes()">Reset Position</button>
           </p>
         </div>
     </div>
@@ -90,7 +80,7 @@ Press F12 to see the console for debugging.</p>
 in vec3 aPosition;
 in vec3 aColor;
 
-uniform float uTime; //time in sec
+uniform float uTime;
 uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;
 uniform mat4 uModelTransformationMatrix;
@@ -152,67 +142,6 @@ void main() {
     fragEditor.value = document.getElementById("fragment-shader").textContent;
 
     let program, posLoc, colorLoc, timeLoc, uMVM, uPM, uMTM;
-    // let vbo, nbo, ibo;
-    let vbo_cy, nbo_cy, ibo_cy, vbo_to, nbo_to, ibo_to, vbo_sp, nbo_sp, ibo_sp, vbo_co, nbo_co, ibo_co;
-
-    // const select = document.getElementById("obj_selection");
-
-    // Buffers
-    function initBuffers() {
-
-      //shape 1
-      vbo_cy = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbo_cy);
-      gl.bufferData(gl.ARRAY_BUFFER, cylinderPositions, gl.STATIC_DRAW);
-
-      nbo_cy = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, nbo_cy);
-      gl.bufferData(gl.ARRAY_BUFFER, cylinderColors, gl.STATIC_DRAW);
-
-      ibo_cy = gl.createBuffer();
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo_cy); 
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, cylinderIndices, gl.STATIC_DRAW);
-
-      //shape 2
-      vbo_to = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbo_to);
-      gl.bufferData(gl.ARRAY_BUFFER, torusPositions, gl.STATIC_DRAW);
-
-      nbo_to = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, nbo_to);
-      gl.bufferData(gl.ARRAY_BUFFER, torusColors, gl.STATIC_DRAW);
-
-      ibo_to = gl.createBuffer();
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo_to); 
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, torusIndices, gl.STATIC_DRAW);
-
-      //shape 3
-      vbo_sp = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbo_sp);
-      gl.bufferData(gl.ARRAY_BUFFER, spherePositions, gl.STATIC_DRAW);
-
-      nbo_sp = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, nbo_sp);
-      gl.bufferData(gl.ARRAY_BUFFER, sphereColors, gl.STATIC_DRAW);
-
-      ibo_sp = gl.createBuffer();
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo_sp); 
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, sphereIndices, gl.STATIC_DRAW);
-
-      //shape 4
-      vbo_co = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbo_co);
-      gl.bufferData(gl.ARRAY_BUFFER, conePositions, gl.STATIC_DRAW);
-
-      nbo_co = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, nbo_co);
-      gl.bufferData(gl.ARRAY_BUFFER, coneColors, gl.STATIC_DRAW);
-
-      ibo_co = gl.createBuffer();
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo_co); 
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, coneIndices, gl.STATIC_DRAW);
-    }
-    // initBuffers();
 
     function initShaderProgram() {
       try {
@@ -230,53 +159,7 @@ void main() {
     vertEditor.onkeyup = initShaderProgram;
     fragEditor.onkeyup = initShaderProgram;
 
-    // Mouse and keyboard interactions
-    let mouseDown = false, lastX, lastY, cubeRotX = 45, cubeRotY = 45, translateX = 0, translateY = 0, scaleX = 1, scaleY = 1, shearXY = 0, shearXZ = 0, shearYZ = 0, shearZY = 0;
     let camX = 0, camY = 0, camZ = -6;
-
-    canvas.addEventListener('mousedown', e => { mouseDown = true; lastX = e.clientX; lastY = e.clientY; });
-    canvas.addEventListener('mouseup', () => mouseDown = false);
-    canvas.addEventListener('mousemove', e => {
-      if (!mouseDown) return;
-      let dx = e.clientX - lastX;
-      let dy = e.clientY - lastY;
-      if(selectedTransformation == "rotate")
-      {
-        cubeRotY += dx * 0.01;
-        cubeRotX += dy * 0.01;
-      }
-      else if(selectedTransformation == "translate")
-      {
-        translateX += dx * 0.01;
-        translateY -= dy * 0.01;
-      }
-      else if(selectedTransformation == "scale")
-      {
-        scaleX += dx * 0.01;
-        scaleY += dy * 0.01;
-      }
-      else if(selectedTransformation == "shear")
-      {
-        shearXY += dx * 0.01;
-        shearXZ += dx * 0.005;
-        shearYZ += dy * 0.01;
-        shearZY += dy * 0.005;
-      }
-      
-      lastX = e.clientX; lastY = e.clientY;
-    });
-
-    document.addEventListener('keydown', e => {
-      const step = 0.2;
-      switch (e.key) {
-        case 'ArrowUp': camY -= step; break;
-        case 'ArrowDown': camY += step; break;
-        case 'ArrowLeft': camX += step; break;
-        case 'ArrowRight': camX -= step; break;
-        case 'w': camZ += step; break;
-        case 's': camZ -= step; break;
-      }
-    });
 
     function drawShape(positions, colors, indices, modelMatrix)
     {
@@ -331,7 +214,7 @@ void main() {
 
     function initScene()
     {
-      drawCylinder(0.1, 2);
+      drawCylinder(0.05, 2);
       drawTorus(0.2, 0.1);
       drawSphere(0.3);
       drawCone(0.3, 0.5);
@@ -345,7 +228,7 @@ void main() {
       torus.children.push(sphere);
       sphere.children.push(cone);
 
-      return {root: cylinder, torus, sphere, cone};
+      return {root: cylinder, cylinder, torus, sphere, cone};
     }
 
     function drawNode(Node, ParentWorld)
@@ -372,9 +255,11 @@ void main() {
         drawNode(child, world);
     }
 
+    const scene = initScene();
+
     function hierarchichalModelRender()
     {
-      const scene = initScene();
+      updateShapes(scene);
 
       gl.clearColor(0, 0, 0, 1);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -391,44 +276,6 @@ void main() {
       drawNode(scene.root, mat4Identity());
     }
 
-    function loadObject(objectName)
-    {
-      gl.clearColor(0, 0, 0, 1);
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-      let modelViewMatrix = mat4Identity();
-      let proj = projOrtho;
-      modelTransformationMatrix = mat4Identity();
-
-      modelViewMatrix = mat4Translate(modelViewMatrix, [camX, camY, camZ]);
-      
-      gl.uniformMatrix4fv(uPM, false, proj);
-      gl.uniformMatrix4fv(uMVM, false, modelViewMatrix);
-      
-      const upright = rotation(-Math.PI / 2, 0);
-
-      drawCylinder(0.1, 2);
-      let cylinderTranslate = multiplyMat4(translation(0, -2, 0), upright);
-      drawShape(cylinderPositions, cylinderColors, cylinderIndices, cylinderTranslate);
-
-      drawTorus(0.2, 0.1);
-      let torusTranslate = translation(0, 0.3, 0);
-      drawShape(torusPositions, torusColors, torusIndices, torusTranslate);
-
-      drawSphere(0.3);
-      let sphereTranslate = translation(0, 0.9, 0);
-      drawShape(spherePositions, sphereColors, sphereIndices, sphereTranslate);
-
-      drawCone(0.3, 0.5);
-      let coneTranslate = multiplyMat4(translation(0, 1.2, 0), upright);
-      drawShape(conePositions, coneColors, coneIndices, coneTranslate);
-    }
-
-    // select.addEventListener('change', e => {
-    //   loadObject(e.target.value);      
-    // });
-
-
     // Projection setup
     let fov = Math.PI / 4, aspect = canvas.width / canvas.height, zNear = 0.1, zFar = 100;
 
@@ -441,55 +288,9 @@ void main() {
     box2Cube(-orthoSize * aspect, orthoSize * aspect, -orthoSize, orthoSize, zNear, zFar),
     flipZ()
 );
-    let proj = projOrtho;
 
-    let startTime = Date.now();
-
-    function render() {
-      gl.enable(gl.DEPTH_TEST);
-      gl.clearColor(0, 0, 0, 1);
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-      let transform_mat = getTransformationMatrix();
-
-      // init model-view matrix as identity matrix
-      let modelViewMatrix = mat4Identity();
-      // init model transformation matrix as identity matrix
-      let modelTransformationMatrix = mat4Identity();
-
-      //delta time in ms
-      let deltaTime = Date.now() - startTime;
-
-
-      // object rotation
-      modelTransformationMatrix = multiplyMat4(modelTransformationMatrix, transform_mat);
-      // camera translation
-      modelViewMatrix = mat4Translate(modelViewMatrix, [camX, camY, camZ]);
-      
-      //set time in seconds
-      gl.uniform1f(timeLoc, deltaTime/1000.0);
-      gl.uniformMatrix4fv(uPM, false, proj);
-      gl.uniformMatrix4fv(uMVM, false, modelViewMatrix);
-      gl.uniformMatrix4fv(uMTM, false, modelTransformationMatrix);
-
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-      gl.enableVertexAttribArray(posLoc);
-      gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
-
-      gl.bindBuffer(gl.ARRAY_BUFFER, nbo);
-      gl.enableVertexAttribArray(colorLoc);
-      gl.vertexAttribPointer(colorLoc, 3, gl.FLOAT, false, 0, 0);
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
-
-      // draw the object by the index order
-      gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
-    }
-
-    // Initialize when page loads
     window.onload = function () {
-      // loadObject();
-      hierarchichalModelRender();
-      // setInterval(render, 30);
+      setInterval(hierarchichalModelRender, 30);
     }
 
   </script>
